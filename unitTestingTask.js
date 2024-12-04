@@ -8,7 +8,7 @@
     } else {
         root.unitTestingTask = factory(root);
     }
-}(this, function (root) {
+}(typeof global !== 'undefined' ? global : this, function (root) {
     'use strict';
 
     /**
@@ -168,6 +168,7 @@
      * @return {String}
      */
     function unitTestingTask (format, date) {
+        console.log('date ---> ', process.env.TZ)
         if (!format || typeof format !== 'string') {
             throw new TypeError('Argument `format` must be a string');
         }
