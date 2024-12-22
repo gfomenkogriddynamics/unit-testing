@@ -25,7 +25,7 @@ describe('unitTestingTask', () => {
     })
 
 
-    describe('Input validation', () => {
+    describe('Input', () => {
         test('should handle Date object as input', () => {
             expect(unitTestingTask('YYYY-MM-dd', new Date())).toBe("2024-02-05");
         });
@@ -63,7 +63,7 @@ describe('unitTestingTask', () => {
         })
     })
 
-    describe('Tokens validation', () => {
+    describe('Tokens', () => {
 
         describe('Year', () => {
             test('YYYY', () => {
@@ -206,7 +206,7 @@ describe('unitTestingTask', () => {
         })
     })
 
-    describe('Customs formatters validation', () => {
+    describe('Default formatters', () => {
         test('ISODate', () => {
             MockTimezone.register('UTC');
             expect(unitTestingTask('ISODate')).toBe('2024-02-05');
@@ -227,4 +227,62 @@ describe('unitTestingTask', () => {
             expect(unitTestingTask('ISODateTimeTZ')).toBe('2024-02-05T01:02:03+00:00');
         })
     })
+
+    describe('Custom formatters', () => {
+        test('should allow custom formats to be registered and used', () => {
+            unitTestingTask.register('custom', 'DD, MMMM d, YYYY');
+            const date = new Date('2024-04-25');
+            expect(unitTestingTask('custom', date)).toEqual('Thu, April 25, 2024');
+        });
+    });
+
+    describe('Languages', () => {
+        beforeEach(() => {
+            unitTestingTask.lang('en');
+        });
+
+        test('should allow custom language options', () => {
+            unitTestingTask.lang('custom', {
+                _months: 'A_B_C_D_E_F_G_H_I_J_K_L'.split('_'),
+                months: function (date) {
+                    return this._months[date.getMonth()];
+                }
+            });
+
+            unitTestingTask.lang('custom');
+            expect(unitTestingTask('MMMM', new Date('2024-04-25'))).toBe('D');
+        });
+
+        test('should fallback to default language if specified language is not found', () => {
+            const currentLang = unitTestingTask.lang();
+            unitTestingTask.lang('INVALID LANGUAGE');
+            expect(unitTestingTask.lang()).toBe(currentLang);
+        });
+
+        test('should return default language formatting for undefined tokens in a custom language', () => {
+            unitTestingTask.lang('custom', {
+                _months: 'A_B_C_D_E_F_G_H_I_J_K_L'.split('_'),
+            });
+
+            unitTestingTask.lang('custom');
+            expect(unitTestingTask('YYYY', new Date('2024-04-25'))).toBe('2024');
+        });
+
+        test('should allow switching between languages', () => {
+            unitTestingTask.lang('custom', {
+                _months: 'A_B_C_D_E_F_G_H_I_J_K_L'.split('_'),
+                months: function (date) {
+                    return this._months[date.getMonth()];
+                }
+            });
+
+            unitTestingTask.lang('custom');
+            let date = new Date('2024-04-25');
+            expect(unitTestingTask('MMMM', date)).toBe('D');
+
+            unitTestingTask.lang('en');
+            date = new Date('2024-04-25');
+            expect(unitTestingTask('MMMM', date)).toBe('April');
+        });
+    });
 })
